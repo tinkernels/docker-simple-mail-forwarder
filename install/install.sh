@@ -5,12 +5,11 @@ set -x
 # disable sshd
 rm -rf /etc/service/sshd
 
-mv /app/entrypoint.sh /app/entrypoint.sh
-chmod +x /app/entrypoint.sh
-
 # syslog-ng.conf manipulation
 sed -i 's/@version.*$/@version:\ 3.25/g' /etc/syslog-ng/syslog-ng.conf
 sed -i 's/use_dns(no);//g' /etc/syslog-ng/syslog-ng.conf
+
+chmod +x /app/entrypoint.sh
 
 mkdir -p /etc/postfix/cert
 
