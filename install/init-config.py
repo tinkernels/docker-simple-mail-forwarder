@@ -286,13 +286,11 @@ def set_perm():
     os.system("chown postfix /etc/sasldb2")
     os.system("chmod 600 /app/CLOUDFLARE_DNS_API_TOKEN")
 
-
 def get_random_string(length: int = 16) -> str:
     # Random string with the combination of lower and upper case
     letters = string.ascii_letters
     result_str = ''.join(random.choice(letters) for i in range(length))
     return result_str
-
 
 def get_user_and_domain_from_email(email: str = None) -> dict:
     if email_re.match(email) != None:

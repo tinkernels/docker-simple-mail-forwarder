@@ -11,8 +11,6 @@ sed -i 's/use_dns(no);//g' /etc/syslog-ng/syslog-ng.conf
 
 chmod +x /app/entrypoint.sh
 
-mkdir -p /etc/postfix/cert
-
 mv /app/main.dist.cf /etc/postfix/main.cf
 mv /app/master.dist.cf /etc/postfix/master.cf
 
@@ -36,9 +34,6 @@ chmod +x /etc/service/opendkim/run
 
 mv /app/opendkim.conf /etc/opendkim.conf
 chmod u=rw,go=r /etc/opendkim.conf
-mkdir -p /etc/opendkim/keys
-chown -R opendkim:opendkim /etc/opendkim
-chmod go-rw /etc/opendkim/keys
 
 # original SOCKET=local:$RUNDIR/opendkim.sock
 sed -i 's%^\s*SOCKET=.*$%%g' /etc/default/opendkim
