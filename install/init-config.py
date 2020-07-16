@@ -61,7 +61,7 @@ def read_conf() -> dict:
     forwards_seg1 = forward_conf.split(";")
     forwards = []
     for seg1 in forwards_seg1:
-        forwards_seg2 = seg1.split(":")
+        forwards_seg2 = seg1.strip().split(":")
         if forwards_seg2 == None or len(forwards_seg2) < 2:
             continue
         print(f">>> forward: {forwards_seg2}")
@@ -71,22 +71,16 @@ def read_conf() -> dict:
             continue
         forward_to = []
         forwards_seg3 = forwards_seg2[1].split("|")
-        if forwards_seg3 == None or len(forwards_seg3) < 2:
-            tmp_forward_to = forwards_seg2[1].strip()
-            print(f">>> forward to: {tmp_forward_to}")
-            if email_re.match(tmp_forward_to) == None:
+        for seg3 in forwards_seg3:
+            seg3_stripped = seg3.strip()
+            if email_re.match(seg3_stripped) != None:
+                print(f">>> forward to: {seg3_stripped}")
+                forward_to.append(seg3_stripped)
+            else:
                 continue
-            forward_to.append(tmp_forward_to)
-        else:
-            for seg3 in forwards_seg3:
-                if email_re.match(seg3.strip()) != None:
-                    print(f">>> forward to: {seg3.strip()}")
-                    forward_to.append(seg3.strip())
-                else:
-                    continue
         forward_from_pwd = None
         if len(forwards_seg2) > 2 and forwards_seg2[2] != None:
-            forward_from_pwd = forwards_seg2[2]
+            forward_from_pwd = forwards_seg2[2].strip()
         else:
             forward_from_pwd = get_random_string(32)
         print(f"!!! password for {forward_from}: {forward_from_pwd}")
