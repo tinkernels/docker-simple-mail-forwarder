@@ -9,9 +9,12 @@ export PATH
 command_directory=$(postconf -h command_directory)
 daemon_directory=$("$command_directory/postconf" -h daemon_directory)
 
+# try start postfix and reload
+"$daemon_directory/master" -w && "$command_directory/postfix" reload
 # kill Postfix if running
 "$daemon_directory/master" -t || "$command_directory/postfix" stop
 
 sv start opendkim || exit 1
 # run Postfix
-exec "$daemon_directory/master"
+# exec "$daemon_directory/master"
+exec "$command_directory/postfix" start-fg
