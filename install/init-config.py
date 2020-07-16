@@ -208,7 +208,7 @@ def gen_dkim_key():
             f"opendkim-genkey -b 2048 -h rsa-sha256 -r -s {key_name} -d {dm} -v")
         with open(os.path.join(opendkim_conf_keys_path, f"{key_name}.txt"), "r") as fdk_txt:
             txt_tmp = fdk_txt.read()
-            print(">>> domain[ {dm} ] dkim txt:\n{txt_tmp}")
+            print(f">>> domain[ {dm} ] dkim txt:\n{txt_tmp}")
         key_table_txt += f"{dm_hash}  {dm}:{current_time_epoch}:/etc/opendkim/keys/{key_name}.private"
     print(f">>> dkim signing table:\n{signing_table_txt}")
     print(f">>> dkim key table:\n{key_table_txt}")
