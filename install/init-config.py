@@ -202,7 +202,7 @@ def gen_dkim_key():
         dm_hash = short_hash(dm)
         signing_table_txt += f"*@{dm} {dm_hash}\n"
         current_time_epoch = int(time.time())
-        key_name = f"{dm}-{current_time_epoch}"
+        key_name = f"{dm_hash}_{current_time_epoch}"
         os.chdir(opendkim_conf_keys_path)
         os.system(
             f"opendkim-genkey -b 2048 -h rsa-sha256 -r -s {key_name} -d {dm} -v")
