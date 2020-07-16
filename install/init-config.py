@@ -247,8 +247,15 @@ def gen_certbot_cert(domains: list = None) -> bool:
         return False
     subprocess.run(
         ["rm", "-rf", os.path.join(letsencrypt_live_cert_path, "*")])
+
+    forwards = read_conf()["forwards"]
+    if len(forwards) == 0:
+      print("!!! no email in forwards, can't finish certbot register")
+      return False
+    email_reg = forwards[0]["forward_from"]
+    print(f">>> use {email_reg} for letsencrypt registration")
     certbot_proc = subprocess.run(["certbot",
-                                   "certonly", "--agree-tos", "-n", "-m", "example@example.com",
+                                   "certonly", "--agree-tos", "-n", "-m", email_reg,
                                    "--dns-cloudflare", "--dns-cloudflare-credentials",
                                    "/app/CLOUDFLARE_DNS_API_TOKEN", "-d",
                                    ",".join([s.strip() for s in domains])])
@@ -316,10 +323,10 @@ def main() -> int:
         _, virtual_domains = get_virtual_users_and_domains()
         print(f">>> virtual domains: {virtual_domains}")
         if not os.path.exists(postfix_cert_path):
-            print(">>> will generate postfix certbot certs")
             print(f">>> ENV CLOUDFLARE_DNS_API_TOKEN: {os.environ.get('CLOUDFLARE_DNS_API_TOKEN')}")
             if os.environ.get("CLOUDFLARE_DNS_API_TOKEN") != None \
                 and os.environ.get("CLOUDFLARE_DNS_API_TOKEN").strip() != "":
+                print(">>> will generate postfix certbot certs")
                 if not gen_certbot_cert(virtual_domains):
                     print("!!! generate certbot cert failed")
                     return 1
