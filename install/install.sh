@@ -27,8 +27,6 @@ cat /dev/null > /etc/postfix/aliases && newaliases \
     && saslpasswd2 -d test@test.com
 
 mv /install/BANNER /app/
-mv /install/buildenv.sh /app/
-chmod +x /app/buildenv.sh
 
 chmod +x /install/init-config.py
 chmod +x /install/gen-cert-openssl.sh
