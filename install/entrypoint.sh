@@ -57,8 +57,6 @@ function test_running_env() {
 echo ">> Chdir to /app..."
 cd /app || exit 1
 
-# shellcheck disable=SC1091
-[ -e BUILD.env ] && source BUILD.env
 echo "SMF_DOMAIN='$HOSTNAME'" > SMF_DOMAIN.env
 echo "SMF_CONFIG='$SMF_CONFIG'" > SMF_CONFIG.env
 
