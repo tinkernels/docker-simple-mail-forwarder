@@ -9,8 +9,8 @@ mv /install/entrypoint.sh /app/entrypoint.sh
 chmod +x /app/entrypoint.sh
 
 # syslog-ng.conf manipulation
-sed -i s/@version.*$/@version:\ 3.25/g /etc/syslog-ng/syslog-ng.conf
-sed -i s/use_dns\(no\);//g /etc/syslog-ng/syslog-ng.conf
+sed -i 's/@version.*$/@version:\ 3.25/g' /etc/syslog-ng/syslog-ng.conf
+sed -i 's/use_dns\(no\);//g' /etc/syslog-ng/syslog-ng.conf
 
 mkdir -p /etc/postfix/cert
 
@@ -59,7 +59,7 @@ chmod go-rw /etc/opendkim/keys
 mkdir -p /var/spool/postfix/opendkim
 chown opendkim:postfix /var/spool/postfix/opendkim
 # original SOCKET=local:$RUNDIR/opendkim.sock
-sed -i s%^.*SOCKET=.*local.*$%SOCKET=\"local:/var/spool/postfix/opendkim/opendkim.sock\"%g /etc/default/opendkim
+sed -i 's%^.*SOCKET=.*local.*$%SOCKET=\"local:/var/spool/postfix/opendkim/opendkim.sock\"%g' /etc/default/opendkim
 
 # clean
 rm -rf ~/.cache ~/.bash_history
