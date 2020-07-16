@@ -331,12 +331,12 @@ def main() -> int:
             if os.environ.get("CLOUDFLARE_DNS_API_TOKEN") != None \
                 and os.environ.get("CLOUDFLARE_DNS_API_TOKEN").strip() != "":
                 if not gen_certbot_cert(virtual_domains):
-                    print(">>> will generate certbot cert failed")
+                    print("!!! generate certbot cert failed")
                     return 1
             else:
                 print(">>> will generate postfix openssl certs")
                 if not gen_openssl_cert(virtual_domains):
-                    print(">>> will generate openssl cert failed")
+                    print("!!! generate openssl cert failed")
                     return 1
         
         if not os.path.exists(os.path.join(opendkim_conf_keys_path, "lock")):
