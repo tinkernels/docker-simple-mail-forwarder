@@ -12,9 +12,6 @@ daemon_directory=$("$command_directory/postconf" -h daemon_directory)
 # kill Postfix if running
 "$daemon_directory/master" -t || "$command_directory/postfix" stop
 
-# make consistency check
-"$command_directory/postfix" check >/dev/console 2>&1
-
 sv start opendkim || exit 1
 # run Postfix
 exec "$daemon_directory/master"

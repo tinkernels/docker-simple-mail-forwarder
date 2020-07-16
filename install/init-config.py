@@ -11,6 +11,7 @@ import base64
 import struct
 import hashlib
 import time
+import traceback
 
 openssl_gen_conf_content = '''[req]
 req_extensions = v3_req
@@ -35,7 +36,7 @@ commonName_max = 64
 commonName = '''
 # append domain name and [alt-names] if more than one.
 
-openssl_gen_conf_path = "/install/openssl-gen.conf"
+openssl_gen_conf_path = "/app/openssl-gen.conf"
 opendkim_conf_keys_path = "/etc/opendkim/keys"
 opendkim_signing_table_path = "/etc/opendkim/signing.table"
 opendkim_key_table_path = "/etc/opendkim/key.table"
@@ -46,31 +47,40 @@ postfix_virtual_conf_path = "/etc/postfix/virtual"
 
 email_re = re.compile(r'''^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$''')
 
+conf_dict = None
 
 def read_conf() -> dict:
-    domain = os.environ["SMF_DOMAIN"]
-    forward_conf = os.environ["SMF_CONFIG"]
-    my_networks = os.environ["SMF_MYNETWORKS"]
-    relay_host = os.environ["SMF_RELAYHOST"]
-    relay_auth = os.environ["SMF_RELAYAUTH"]
+    global conf_dict
+    if conf_dict != None:
+        return conf_dict
+    domain = os.environ.get("SMF_DOMAIN","")
+    forward_conf = os.environ.get("SMF_CONFIG","")
+    my_networks = os.environ.get("SMF_MYNETWORKS","")
+    relay_host = os.environ.get("SMF_RELAYHOST","")
+    relay_auth = os.environ.get("SMF_RELAYAUTH","")
     forwards_seg1 = forward_conf.split(";")
     forwards = []
     for seg1 in forwards_seg1:
         forwards_seg2 = seg1.split(":")
         if forwards_seg2 == None or len(forwards_seg2) < 2:
             continue
+        print(f">>> forward: {forwards_seg2}")
         forward_from = forwards_seg2[0].strip()
+        print(f">>> forward from: {forward_from}")
         if email_re.match(forward_from) == None:
             continue
         forward_to = []
         forwards_seg3 = forwards_seg2[1].split("|")
         if forwards_seg3 == None or len(forwards_seg3) < 2:
-            tmp_forward_to = forward_to.append(forwards_seg2[1].strip())
+            tmp_forward_to = forwards_seg2[1].strip()
+            print(f">>> forward to: {tmp_forward_to}")
             if email_re.match(tmp_forward_to) == None:
                 continue
+            forward_to.append(tmp_forward_to)
         else:
             for seg3 in forwards_seg3:
                 if email_re.match(seg3.strip()) != None:
+                    print(f">>> forward to: {seg3.strip()}")
                     forward_to.append(seg3.strip())
                 else:
                     continue
@@ -79,7 +89,7 @@ def read_conf() -> dict:
             forward_from_pwd = forwards_seg2[2]
         else:
             forward_from_pwd = get_random_string(32)
-        print(f"password for {forward_from}: {forward_from_pwd}")
+        print(f"!!! password for {forward_from}: {forward_from_pwd}")
         if len(forward_to) != 0:
             forwards.append({
                 "forward_from": forward_from,
@@ -105,11 +115,12 @@ def conf_passwords():
 
 
 def conf_forwarding():
-    virtual_users, virtual_domains = get_virtual_domains()
+    virtual_users, virtual_domains = get_virtual_users_and_domains()
     virtual_txt = "\n".join(virtual_users)
     virtual_txt += "\n"
     for d in virtual_domains:
         virtual_txt += f"@{d} @{d}\n"
+    print(f">>> forwarding virutal config:\n{virtual_txt}")
     with open(postfix_virtual_conf_path, "w") as f:
         f.write(virtual_txt)
     virtual_domains_s = " ".join(virtual_domains)
@@ -140,7 +151,7 @@ def get_hostname():
     return hostname_proc.stdout.decode('utf-8').strip()
 
 
-def conf_my_networkds():
+def conf_my_networks():
     conf = read_conf()
     domain = conf["domain"].strip()
     if domain == None or domain == "":
@@ -184,7 +195,7 @@ def gen_dkim_trusted_hosts():
     for dm in domains:
         trust_hosts_txt += f"{hostname}.{dm}\n"
         trust_hosts_txt += f"{dm}\n"
-
+    print(f">>> dkim trust hosts:\n{trust_hosts_txt}")
     with open(opendkim_trusted_hosts_path, "w") as f:
         f.write(trust_hosts_txt)
 
@@ -201,7 +212,12 @@ def gen_dkim_key():
         os.chdir(opendkim_conf_keys_path)
         os.system(
             f"opendkim-genkey -b 2048 -h rsa-sha256 -r -s {key_name} -d {dm} -v")
-        key_table_txt += f"{dm_hash}  {dm}:{time_epoch}:/etc/opendkim/keys/{key_name}.private"
+        with open(os.path.join(opendkim_conf_keys_path, f"{key_name}.txt"), "r") as fdk_txt:
+            txt_tmp = fdk_txt.read()
+            print(">>> domain[ {dm} ] dkim txt:\n{txt_tmp}")
+        key_table_txt += f"{dm_hash}  {dm}:{current_time_epoch}:/etc/opendkim/keys/{key_name}.private"
+    print(f">>> dkim signing table:\n{signing_table_txt}")
+    print(f">>> dkim key table:\n{key_table_txt}")
     with open(opendkim_signing_table_path, "w") as fsign:
         fsign.write(signing_table_txt)
     with open(opendkim_key_table_path, "a+") as fsign:
@@ -214,7 +230,7 @@ def gen_openssl_cert(domains: list = None) -> bool:
     if domains == None or len(domains) == 0:
         return False
     with open(openssl_gen_conf_path, "w") as f:
-        names_conf = ""
+        names_conf = openssl_gen_conf_content
         for i, domain in enumerate(domains):
             if i == 0:
                 names_conf += f"{domain}\n\n[alt_names]\nDNS.1="
@@ -222,13 +238,15 @@ def gen_openssl_cert(domains: list = None) -> bool:
                 names_conf += f"{domain}\n"
             if i > 1:
                 names_conf += f"DNS.{i}={domain}\n"
+        print(f">>> openssl conf:\n{names_conf}")
         f.write(names_conf)
     openssl_proc = subprocess.run(["/usr/bin/env",
-                                   "bash", "/install/gen-cert-openssl.sh"])
+                                   "bash", "/app/gen-cert-openssl.sh"])
     if openssl_proc.returncode == 0:
-        print("openssl ran sucessfully")
+        print(">>> openssl ran sucessfully")
     else:
-        print("openssl ran failed")
+        print("!!! openssl ran failed")
+        return False
     return True
 
 
@@ -240,12 +258,12 @@ def gen_certbot_cert(domains: list = None) -> bool:
     certbot_proc = subprocess.run(["certbot",
                                    "certonly", "--agree-tos", "-n", "-m", "example@example.com",
                                    "--dns-cloudflare", "--dns-cloudflare-credentials",
-                                   "/install/CLOUDFLARE_DNS_API_TOKEN", "-d",
+                                   "/app/CLOUDFLARE_DNS_API_TOKEN", "-d",
                                    ",".join([s.strip() for s in domains])])
     if certbot_proc.returncode != 0:
-        print("certbot ran failed")
+        print("!!! certbot ran failed")
         return False
-    print("certbot ran successfully")
+    print(">>> certbot ran successfully")
     os.remove(postfix_cert_path)
     subfolders = [d.path for d in os.scandir(
         letsencrypt_live_cert_path) if d.is_dir()]
@@ -266,6 +284,8 @@ def set_perm():
     os.system("chown -R opendkim:opendkim /etc/opendkim")
     os.system("chmod go-rw /etc/opendkim/keys")
     os.system("chown -R opendkim:postfix /var/spool/postfix/opendkim")
+    os.system("chown postfix /etc/sasldb2")
+    os.system("chmod 600 /app/CLOUDFLARE_DNS_API_TOKEN")
 
 
 def get_random_string(length: int = 16) -> str:
@@ -302,27 +322,42 @@ def b64dec_withou_padding(s):
 
 def main() -> int:
     try:
+        print(">>> start init-config")
+        _, virtual_domains = get_virtual_users_and_domains()
+        print(f">>> virtual domains: {virtual_domains}")
         if not os.path.exists(postfix_cert_path):
-            if os.environ["CLOUDFLARE_DNS_API_TOKEN"] != None \
-                and os.environ["CLOUDFLARE_DNS_API_TOKEN"].strip() != "":
-                if not gen_certbot_cert():
+            print(">>> will generate postfix certbot certs")
+            print(f">>> ENV CLOUDFLARE_DNS_API_TOKEN: {os.environ.get('CLOUDFLARE_DNS_API_TOKEN')}")
+            if os.environ.get("CLOUDFLARE_DNS_API_TOKEN") != None \
+                and os.environ.get("CLOUDFLARE_DNS_API_TOKEN").strip() != "":
+                if not gen_certbot_cert(virtual_domains):
+                    print(">>> will generate certbot cert failed")
                     return 1
             else:
-                if not gen_openssl_cert():
+                print(">>> will generate postfix openssl certs")
+                if not gen_openssl_cert(virtual_domains):
+                    print(">>> will generate openssl cert failed")
                     return 1
         
         if not os.path.exists(os.path.join(opendkim_conf_keys_path, "lock")):
+            print(">>> will generate dkim key")
             gen_dkim_key()
         
+        print(">>> will generate dkim trusted.hosts")
         gen_dkim_trusted_hosts()
-
+        print(">>> will config passwords")
         conf_passwords()
+        print(">>> will config forwarding")
         conf_forwarding()
-        conf_my_networkds()
+        print(">>> will config mynetworks")
+        conf_my_networks()
+        print(">>> will confing relay")
         conf_relay()
-        
+        print(">>> will set file permission")
         set_perm()
-    except:
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
         return 1
     return 0
 
