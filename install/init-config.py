@@ -216,7 +216,7 @@ def gen_dkim_key():
         fsign.write(signing_table_txt)
     with open(opendkim_key_table_path, "a+") as fsign:
         fsign.write(key_table_txt)
-    os.system(f"touch {os.path.join(opendkim_conf_keys_path, "lock")}")
+    os.system(f"touch {os.path.join(opendkim_conf_keys_path, 'lock')}")
 
 def gen_openssl_cert(domains: list = None) -> bool:
     if domains == None or len(domains) == 0:
