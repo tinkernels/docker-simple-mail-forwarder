@@ -200,7 +200,7 @@ def gen_dkim_key():
     key_table_txt = ""
     for dm in domains:
         dm_hash = short_hash(dm)
-        signing_table_txt += f"*@{dm} {dm_hash}"
+        signing_table_txt += f"*@{dm} {dm_hash}\n"
         current_time_epoch = int(time.time())
         key_name = f"{dm}-{current_time_epoch}"
         os.chdir(opendkim_conf_keys_path)
@@ -209,7 +209,7 @@ def gen_dkim_key():
         with open(os.path.join(opendkim_conf_keys_path, f"{key_name}.txt"), "r") as fdk_txt:
             txt_tmp = fdk_txt.read()
             print(f">>> domain[ {dm} ] dkim txt:\n{txt_tmp}")
-        key_table_txt += f"{dm_hash}  {dm}:{current_time_epoch}:/etc/opendkim/keys/{key_name}.private"
+        key_table_txt += f"{dm_hash}  {dm}:{current_time_epoch}:{os.path.join(opendkim_conf_keys_path, key_name + '.private')}\n"
     print(f">>> dkim signing table:\n{signing_table_txt}")
     print(f">>> dkim key table:\n{key_table_txt}")
     with open(opendkim_signing_table_path, "w") as fsign:
@@ -330,15 +330,17 @@ def main() -> int:
             else:
                 print(">>> will generate postfix openssl certs")
                 if not gen_openssl_cert(virtual_domains):
-                    print("!!! generate openssl cert failed")
-                    return 1
+                  print("!!! generate openssl cert failed")
+                  return 1
 
         if not os.path.exists(os.path.join(opendkim_conf_keys_path, "lock")):
-            print(">>> will generate dkim key")
-            gen_dkim_key()
+          print(">>> will generate dkim key")
+          gen_dkim_key()
 
         print(">>> will generate dkim trusted.hosts")
         gen_dkim_trusted_hosts()
+        print(f">>> dkim TXT:")
+        os.system(f"cat {os.path.join(opendkim_conf_keys_path, '*.txt')}")
         print(">>> will config passwords")
         conf_passwords()
         print(">>> will config forwarding")
