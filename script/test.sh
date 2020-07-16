@@ -1,9 +1,6 @@
-#!/bin/bash
-#
-# maintainer: Zhuohuan LI <zixia@zixia.net>
-#
+#!/usr/bin/env bash
 
-OWNER="zixia"
+OWNER="tinkernels"
 NAME="simple-mail-forwarder"
 IMAGE_NAME="$OWNER/$NAME"
 

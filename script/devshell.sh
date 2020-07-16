@@ -1,9 +1,6 @@
-#!/bin/bash
-#
-# maintainer: Zhuohuan LI <zixia@zixia.net>
-#
+#!/usr/bin/env bash
 
-NAME="zixia/simple-mail-forwarder"
+NAME="tinkernels/simple-mail-forwarder"
 
 [ -n "$1" ] || {
     echo ">> ERROR: Dev Shell must specify a TAG"
@@ -20,6 +17,6 @@ fi
 
 shift # TAG
 
-CMD="docker run --rm --name simple-mail-forwarder -it --entrypoint /bin/bash -v `pwd`:/app.out $NAME$TAG"
+CMD="docker run --rm --name simple-mail-forwarder -it --entrypoint /bin/bash -v $(pwd):/app.out $NAME$TAG"
 
-echo $CMD && exec $CMD
+echo "$CMD" && exec "$CMD"

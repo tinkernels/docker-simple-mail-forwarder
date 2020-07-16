@@ -1,9 +1,6 @@
-#!/bin/bash
-#
-# maintainer: Zhuohuan LI <zixia@zixia.net>
-#
+#!/usr/bin/env bash
 
-NAME="zixia/simple-mail-forwarder"
+NAME="tinkernels/simple-mail-forwarder"
 TAG='' && [ -n "$1" ] && TAG=":$1" && shift
 
 docker push "$NAME$TAG"

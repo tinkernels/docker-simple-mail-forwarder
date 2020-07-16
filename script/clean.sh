@@ -1,21 +1,18 @@
-#!/bin/bash
-#
-# maintainer: Zhuohuan LI <zixia@zixia.net>
-#
+#!/usr/bin/env bash
 
-OWNER="zixia"
+OWNER="tinkernels"
 NAME="simple-mail-forwarder"
 IMAGE_NAME="$OWNER/$NAME"
 
 TAG='' && [ -n "$1" ] && TAG=":$1" && shift
 
-contList=`docker ps -a -f name=$NAME -f status=exited -q`
+contList=$(docker ps -a -f name=$NAME -f status=exited -q)
 
 echo -n ">> Clean containers... "
 if [ -n "$contList" ]
 then
     echo -n "Cleaning... "
-    xargs docker rm $contList
+    xargs docker rm "$contList"
     echo "Cleaned."
 else
     echo "Already clean."
@@ -27,7 +24,7 @@ imageList=$(docker images -f "dangling=true" -q)
 if [ -n "$imageList" ]
 then
     echo -n "Cleaning... "
-    docker rmi -f $imageList
+    docker rmi -f "$imageList"
     echo "Cleaned."
 else
     echo "Already clean."

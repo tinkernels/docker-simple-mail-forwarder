@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 ENV_FILE=BUILD.env
@@ -7,7 +7,7 @@ ENV_FILE=BUILD.env
 # Get Github info from LOG file
 #
 RE='^[^ ]+\s+([^ ]+)\s+(.+)\s+<(.+)>\s+([0-9]+)\s+([+-][0-9]{4,4})\s+(.+)$'
-[[ `tail -1 GIT_LOG` =~ $RE ]]
+[[ $(tail -1 GIT_LOG) =~ $RE ]]
 hash=${BASH_REMATCH[1]}
 author=${BASH_REMATCH[2]}
 email=${BASH_REMATCH[3]}
@@ -24,11 +24,11 @@ else
 fi
 
 ## generate date string for human
-date=`TZ=$tz_tmp awk '{ print strftime("%c", $0); }' <<< $date`
+date=$(TZ=$tz_tmp awk '{ print strftime("%c", $0); }' <<< "$date")
 date="$date $tz"
 
 ## get source branch
-read branch < GIT_HEAD
+read -r branch < GIT_HEAD
 branch=${branch##*/}
 
 ## short hash as github, lentgh: 7
@@ -43,8 +43,8 @@ hash=${hash:0:7}
 # Save to file
 #
 cat >> $ENV_FILE <<_EOF
-SMF_BUILD_DATE='`date`'
-SMF_BUILD_HOST='`hostname`'
+SMF_BUILD_DATE='$(date)'
+SMF_BUILD_HOST='$(hostname)'
 SMF_BUILD_IP='$SMF_BUILD_IP'
 
 GIT_BRANCH='$branch'
