@@ -18,8 +18,6 @@ mv /app/master.dist.cf /etc/postfix/master.cf
 
 mv /app/smtp_header_checks /etc/postfix/smtp_header_checks
 
-mv /app/BANNER /app/
-
 chmod +x /app/init-config.py
 chmod +x /app/gen-cert-openssl.sh
 
