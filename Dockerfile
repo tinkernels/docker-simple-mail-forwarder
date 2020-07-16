@@ -25,7 +25,3 @@ EXPOSE 25
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["start"]
 
-## Log Environment (in Builder)
-
-RUN bash buildenv.sh
-

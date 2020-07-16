@@ -26,7 +26,6 @@ cat /dev/null > /etc/postfix/aliases && newaliases \
     && chown postfix /etc/sasldb2 \
     && saslpasswd2 -d test@test.com
 
-mkdir /app
 mv /install/BANNER /app/
 mv /install/buildenv.sh /app/
 chmod +x /app/buildenv.sh
