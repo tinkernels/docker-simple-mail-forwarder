@@ -40,8 +40,6 @@ mkdir -p /etc/opendkim/keys
 chown -R opendkim:opendkim /etc/opendkim
 chmod go-rw /etc/opendkim/keys
 
-mkdir -p /var/spool/postfix/opendkim
-chown opendkim:postfix /var/spool/postfix/opendkim
 # original SOCKET=local:$RUNDIR/opendkim.sock
 sed -i 's%^\s*SOCKET=.*$%%g' /etc/default/opendkim
 sed -i 's%^\s*RUNDIR=.*$%%g' /etc/default/opendkim

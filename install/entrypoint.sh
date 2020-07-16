@@ -70,6 +70,7 @@ echo ">> Powered by SMF - a Simple Mail Forwarder"
 echo ">> View in DockerHub: https://hub.docker.com/r/zixia/simple-mail-forwarder"
 echo
 
+mkdir -p /var/spool/postfix/opendkim
 init_config || exit 1
 
 if [ "$1" == "start" ]; then
