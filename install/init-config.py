@@ -263,7 +263,6 @@ def gen_certbot_cert(domains: list = None) -> bool:
         print("!!! certbot ran failed")
         return False
     print(">>> certbot ran successfully")
-    os.remove(postfix_cert_path)
     subfolders = [d.path for d in os.scandir(
         letsencrypt_live_cert_path) if d.is_dir()]
     for folder in subfolders:
