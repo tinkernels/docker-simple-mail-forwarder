@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
+import base64
+import hashlib
 import os
-import sys
-import subprocess
-import time
+import random
 import re
 import string
-import random
-import base64
-import struct
-import hashlib
+import subprocess
+import sys
 import time
 import traceback
 
@@ -38,16 +36,18 @@ commonName = '''
 
 openssl_gen_conf_path = "/app/openssl-gen.conf"
 opendkim_conf_keys_path = "/etc/opendkim/keys"
-opendkim_signing_table_path = "/etc/opendkim/signing.table"
-opendkim_key_table_path = "/etc/opendkim/key.table"
+opendkim_signing_table_path = "/etc/opendkim/keys/signing.table"
+opendkim_key_table_path = "/etc/opendkim/keys/key.table"
 opendkim_trusted_hosts_path = "/etc/opendkim/trusted.hosts"
 letsencrypt_live_cert_path = "/etc/letsencrypt/live"
 postfix_cert_path = "/etc/postfix/cert/chains.pem"
 postfix_virtual_conf_path = "/etc/postfix/virtual"
 
-email_re = re.compile(r'''^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$''')
+email_re = re.compile(
+  r'''^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$''')
 
 conf_dict = None
+
 
 def read_conf() -> dict:
     global conf_dict
@@ -295,10 +295,8 @@ def get_user_and_domain_from_email(email: str = None) -> dict:
             domain=arr[1],
         )
 
-
 def short_hash(s):
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
-
 
 def b64enc_withou_padding(s):
     if isinstance(s, str):
@@ -330,11 +328,11 @@ def main() -> int:
                 if not gen_openssl_cert(virtual_domains):
                     print("!!! generate openssl cert failed")
                     return 1
-        
+
         if not os.path.exists(os.path.join(opendkim_conf_keys_path, "lock")):
             print(">>> will generate dkim key")
             gen_dkim_key()
-        
+
         print(">>> will generate dkim trusted.hosts")
         gen_dkim_trusted_hosts()
         print(">>> will config passwords")
