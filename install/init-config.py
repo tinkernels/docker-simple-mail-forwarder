@@ -53,7 +53,7 @@ def read_conf() -> dict:
     global conf_dict
     if conf_dict != None:
         return conf_dict
-    domain = os.environ.get("SMF_DOMAIN","")
+    domain = os.environ.get("SMF_DOMAIN","mailserver")
     forward_conf = os.environ.get("SMF_CONFIG","")
     my_networks = os.environ.get("SMF_MYNETWORKS","")
     relay_host = os.environ.get("SMF_RELAYHOST","")
@@ -225,10 +225,8 @@ def gen_openssl_cert(domains: list = None) -> bool:
         names_conf = openssl_gen_conf_content
         for i, domain in enumerate(domains):
             if i == 0:
-                names_conf += f"{domain}\n\n[alt_names]\nDNS.1="
-            if i == 1:
-                names_conf += f"{domain}\n"
-            if i > 1:
+                names_conf += f"{domain}\n\n[alt_names]\nIP.1=127.0.0.1\n"
+            if i > 0:
                 names_conf += f"DNS.{i}={domain}\n"
         print(f">>> openssl conf:\n{names_conf}")
         f.write(names_conf)
@@ -324,12 +322,12 @@ def main() -> int:
             if os.environ.get("CLOUDFLARE_DNS_API_TOKEN") != None \
                 and os.environ.get("CLOUDFLARE_DNS_API_TOKEN").strip() != "":
                 print(">>> will generate postfix certbot certs")
-                if not gen_certbot_cert(virtual_domains):
+                if not gen_certbot_cert([read_conf()["domain"]]):
                     print("!!! generate certbot cert failed")
                     return 1
             else:
                 print(">>> will generate postfix openssl certs")
-                if not gen_openssl_cert(virtual_domains):
+                if not gen_openssl_cert([read_conf()["domain"]]):
                   print("!!! generate openssl cert failed")
                   return 1
 
