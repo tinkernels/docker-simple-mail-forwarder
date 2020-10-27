@@ -362,4 +362,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "after-certbot-renew":
       os.system(f"rm -f {postfix_cert_path}")
       renew_postfix_cert_from_certbot()
-    sys.exit(main())
+    else:
+      sys.exit(main())
