@@ -261,17 +261,19 @@ def gen_certbot_cert(domains: list = None) -> bool:
         print("!!! certbot ran failed")
         return False
     print(">>> certbot ran successfully")
-    subfolders = [d.path for d in os.scandir(
-        letsencrypt_live_cert_path) if d.is_dir()]
-    for folder in subfolders:
-        privkey_path = os.path.join(folder, "privkey.pem")
-        fullchain_cert_path = os.path.join(folder, "fullchain.pem")
-        if not os.path.exists(privkey_path) or not os.path.exists(fullchain_cert_path):
-            continue
-        os.system(f"cat {privkey_path} >> {postfix_cert_path}")
-        os.system(f"cat {fullchain_cert_path} >> {postfix_cert_path}")
+    renew_postfix_cert_from_certbot()
     return True
 
+def renew_postfix_cert_from_certbot():
+    subfolders = [d.path for d in os.scandir(
+      letsencrypt_live_cert_path) if d.is_dir()]
+    for folder in subfolders:
+      privkey_path = os.path.join(folder, "privkey.pem")
+      fullchain_cert_path = os.path.join(folder, "fullchain.pem")
+      if not os.path.exists(privkey_path) or not os.path.exists(fullchain_cert_path):
+        continue
+      os.system(f"cat {privkey_path} >> {postfix_cert_path}")
+      os.system(f"cat {fullchain_cert_path} >> {postfix_cert_path}")
 
 def set_perm():
     os.system("chown -R root.postfix /etc/postfix/cert/")
@@ -357,4 +359,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "after-certbot-renew":
+      os.system(f"rm -f {postfix_cert_path}")
+      renew_postfix_cert_from_certbot()
     sys.exit(main())

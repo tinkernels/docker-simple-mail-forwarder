@@ -1,4 +1,4 @@
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-0 */12 * * * root test -x "$(which certbot)" && perl -e 'sleep int(rand(43200))' && certbot renew -n --agree-tos
+0 */12 * * * root test -x "$(which certbot)" && perl -e 'sleep int(rand(43200))' && certbot renew -n --agree-tos && python3 /app/init-config.py after-certbot-renew && postfix reload
